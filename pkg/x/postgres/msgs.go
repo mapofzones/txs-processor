@@ -21,6 +21,7 @@ func (p *PostgresProcessor) handleTransaction(ctx context.Context, metadata proc
 		p.txStats = &processor.TxStats{
 			ChainID: metadata.ChainID,
 			Hour:    metadata.BlockTime.Truncate(time.Hour),
+			TurnoverAmount: big.NewInt(0),
 		}
 	}
 
