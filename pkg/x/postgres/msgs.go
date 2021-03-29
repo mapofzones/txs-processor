@@ -17,6 +17,13 @@ func (p *PostgresProcessor) handleTransaction(ctx context.Context, metadata proc
 		panic(fmt.Errorf("%w: could not fetch tx metadata", processor.CommitError))
 	}
 
+	if p.txStats == nil {
+		p.txStats = &processor.TxStats{
+			ChainID: metadata.ChainID,
+			Hour:    metadata.BlockTime.Truncate(time.Hour),
+		}
+	}
+
 	// if tx had errors and did not affect the state
 	if !metadata.TxMetadata.Accepted {
 		for _, m := range msg.Messages {
@@ -26,13 +33,6 @@ func (p *PostgresProcessor) handleTransaction(ctx context.Context, metadata proc
 			}
 		}
 		return nil
-	}
-
-	if p.txStats == nil {
-		p.txStats = &processor.TxStats{
-			ChainID: metadata.ChainID,
-			Hour:    metadata.BlockTime.Truncate(time.Hour),
-		}
 	}
 
 	if p.txStats.TurnoverAmount == nil {
