@@ -69,6 +69,7 @@ func (p *Processor) Process(ctx context.Context) error {
 }
 
 func (p *Processor) ProcessBlock(ctx context.Context, block watcher.Block) error {
+	log.Println("start process: chain_id: ", block.ChainID(), " height: ", block.Height())
 	err := p.Validate(ctx, block)
 	if err != nil {
 		return err

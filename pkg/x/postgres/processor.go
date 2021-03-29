@@ -155,5 +155,6 @@ func (p *PostgresProcessor) Commit(ctx context.Context, block watcher.Block) err
 			return fmt.Errorf("%w: %s", processor.CommitError, err.Error())
 		}
 	}
+	log.Println("chain_id: ", block.ChainID(), " height: ", block.Height())
 	return nil
 }
