@@ -13,7 +13,7 @@ import (
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	blocks, err := rabbitmq.BlockStream(ctx, os.Getenv("rabbitmq"), "blocks_v2")
+	blocks, err := rabbitmq.BlockStream(ctx, os.Getenv("rabbitmq"), "hackatom_blocks_v2")
 	if err != nil {
 		log.Fatal(err)
 	}
