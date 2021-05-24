@@ -38,8 +38,8 @@ const markChannelQuery = `update ibc_channels
         where zone = '%s'
         and channel_id = '%s';`
 
-const addIbcStatsQuery = `insert into ibc_transfer_hourly_stats(zone, zone_src, zone_dest, hour, txs_cnt, period) values %s
-    on conflict(zone, zone_src, zone_dest, hour, period) do update
+const addIbcStatsQuery = `insert into ibc_transfer_hourly_stats(zone, zone_src, zone_dest, hour, txs_cnt, period, ibc_channel) values %s
+    on conflict(zone, zone_src, zone_dest, hour, period, ibc_channel) do update
         set txs_cnt = ibc_transfer_hourly_stats.txs_cnt + %d;`
 
 // read-only queries
@@ -56,5 +56,9 @@ const clientIDFromConnectionIDQuery = `select client_id from ibc_connections
 		and zone = '%s';`
 
 const connectionIDFromChannelIDQuery = `select connection_id from ibc_channels
+	where channel_id = '%s'
+		and zone = '%s';`
+
+const statusFromChannelIDQuery = `select is_opened from ibc_channels
 	where channel_id = '%s'
 		and zone = '%s';`

@@ -114,10 +114,14 @@ func (p *PostgresProcessor) handleIBCTransfer(ctx context.Context, metadata proc
 		return fmt.Errorf("%w: could not fetch chainID connected to given channelID", processor.CommitError)
 	}
 
+	isEnabledChannel, err := p.GetChannelStatus(ctx, msg.ChannelID, metadata.ChainID)
+	if err != nil || isEnabledChannel == false {
+		return fmt.Errorf("%w: could not process ibc transfer with closed channelID", processor.CommitError)
+	}
 	if msg.Source {
-		p.ibcStats.Append(metadata.ChainID, chainID, metadata.BlockTime)
+		p.ibcStats.Append(metadata.ChainID, chainID, metadata.BlockTime, msg.ChannelID)
 	} else {
-		p.ibcStats.Append(chainID, metadata.ChainID, metadata.BlockTime)
+		p.ibcStats.Append(chainID, metadata.ChainID, metadata.BlockTime, msg.ChannelID)
 	}
 
 	return nil

@@ -82,6 +82,26 @@ func (p *PostgresProcessor) ChainIDFromChannelID(ctx context.Context, channelID,
 	return "", nil
 }
 
+func (p *PostgresProcessor) GetChannelStatus(ctx context.Context, channelID, originChainID string) (bool, error) {
+	res, err := p.conn.Query(ctx, fmt.Sprintf(statusFromChannelIDQuery, channelID, originChainID))
+	if err != nil {
+		return false, err
+	}
+
+	defer res.Close()
+
+	if res.Next() {
+		isOpened := false
+		err = res.Scan(&isOpened)
+		if err != nil {
+			return false, err
+		}
+		res.Close()
+		return isOpened, nil
+	}
+	return false, nil
+}
+
 // ChainID method returns chain ID related to the given channel_id
 // it checks for local(block) data and does appropriate db queries
 func (p *PostgresProcessor) ChainID(ctx context.Context, channelID, originChainID string) (string, error) {
