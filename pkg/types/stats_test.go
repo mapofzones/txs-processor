@@ -11,6 +11,7 @@ func TestIbcData_Append(t *testing.T) {
     type args struct {
         source      string
         destination string
+        channel     string
         t           time.Time
     }
     timeArgs, _ := time.Parse("2006-01-02T15:04:05", "2006-01-02T15:04:05")
@@ -19,6 +20,7 @@ func TestIbcData_Append(t *testing.T) {
     sourceName := "mySource"
     destinationName1 := "myDestination"
     destinationName2 := "myDestination2"
+    channelID := "channel-1"
     tests := []struct {
         name    string
         ibcData IbcData
@@ -28,25 +30,25 @@ func TestIbcData_Append(t *testing.T) {
         {
             "initial_increment",
             m,
-            args{sourceName, destinationName1, timeArgs},
-            map[string]map[string]map[time.Time]int{sourceName: {destinationName1: {timeWant: 1}}},
+            args{sourceName, destinationName1, channelID, timeArgs},
+            map[string]map[string]map[string]map[time.Time]int{sourceName: {destinationName1: {channelID: {timeWant: 1}}}},
         },
         {
             "increment_existing",
             m,
-            args{sourceName, destinationName1, timeArgs},
-            map[string]map[string]map[time.Time]int{sourceName: {destinationName1: {timeWant: 2}}},
+            args{sourceName, destinationName1, channelID, timeArgs},
+            map[string]map[string]map[string]map[time.Time]int{sourceName: {destinationName1: {channelID: {timeWant: 2}}}},
         },
         {
             "increment_with_second_destination",
             m,
-            args{sourceName, destinationName2, timeArgs},
-            map[string]map[string]map[time.Time]int{sourceName: {destinationName1: {timeWant: 2}, destinationName2: {timeWant: 1}}},
+            args{sourceName, destinationName2, channelID, timeArgs},
+            map[string]map[string]map[string]map[time.Time]int{sourceName: {destinationName1: {channelID: {timeWant: 2}}, destinationName2: {channelID: {timeWant: 1}}}},
         },
     }
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
-            tt.ibcData.Append(tt.args.source, tt.args.destination, tt.args.t)
+            tt.ibcData.Append(tt.args.source, tt.args.destination, tt.args.t, tt.args.channel)
             assert.Equal(t, tt.want, tt.ibcData)
         })
     }
@@ -57,6 +59,7 @@ func TestIbcData_ToIbcStats(t *testing.T) {
     sourceName := "mySource"
     destinationName1 := "myDestination"
     destinationName2 := "myDestination2"
+    channelID := "channel-1"
     counter1 := 2
     counter2 := 7
     tests := []struct {
@@ -66,15 +69,15 @@ func TestIbcData_ToIbcStats(t *testing.T) {
     }{
         {
             "IbcData(map)_to_IbcStats(slice)",
-            map[string]map[string]map[time.Time]int{sourceName: {destinationName1: {timeArgs: counter1}, destinationName2: {timeArgs: counter2}}},
+            map[string]map[string]map[string]map[time.Time]int{sourceName: {destinationName1: {channelID: {timeArgs: counter1}}, destinationName2: {channelID: {timeArgs: counter2}}}},
             [][]IbcStats{
                 {
-                    {sourceName, destinationName1, timeArgs, counter1},
-                    {sourceName, destinationName2, timeArgs, counter2},
+                    {sourceName, destinationName1, channelID, timeArgs, counter1},
+                    {sourceName, destinationName2, channelID, timeArgs, counter2},
                 },
                 {
-                    {sourceName, destinationName2, timeArgs, counter2},
-                    {sourceName, destinationName1, timeArgs, counter1},
+                    {sourceName, destinationName2, channelID, timeArgs, counter2},
+                    {sourceName, destinationName1, channelID, timeArgs, counter1},
                 },
             },
         },

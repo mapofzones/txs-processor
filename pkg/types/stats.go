@@ -60,6 +60,7 @@ func (m IbcData) ToIbcStats() []IbcStats {
 					stats = append(stats, IbcStats{
 						Source:      source,
 						Destination: destination,
+						Channel:     channel,
 						Hour:        hour,
 						Count:       m[source][destination][channel][hour],
 					})
