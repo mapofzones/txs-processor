@@ -116,7 +116,8 @@ func (p *PostgresProcessor) handleIBCTransfer(ctx context.Context, metadata proc
 
 	isEnabledChannel, err := p.GetChannelStatus(ctx, msg.ChannelID, metadata.ChainID)
 	if err != nil || isEnabledChannel == false {
-		return fmt.Errorf("%w: could not process ibc transfer with closed channelID", processor.CommitError)
+		//return fmt.Errorf("%w: could not process ibc transfer with closed channelID", processor.CommitError)
+		//todo: need to recalculate statistics for frozen transfer txs and resolve the issue of transactions to closed channels
 	}
 	if msg.Source {
 		p.ibcStats.Append(metadata.ChainID, chainID, metadata.BlockTime, msg.ChannelID)
