@@ -27,9 +27,12 @@ func (p *PostgresProcessor) handleTransaction(ctx context.Context, metadata proc
 
 	// if tx had errors and did not affect the state
 	if !metadata.TxMetadata.Accepted {
+		p.txStats.Count++
 		for _, m := range msg.Messages {
 			if _, ok := m.(watcher.IBCTransfer); ok {
 				p.txStats.TxWithIBCTransferFail++
+				p.txStats.TxWithIBCTransfer++
+				//todo: calculate ibc fail transfers with channel information
 				return nil
 			}
 		}
