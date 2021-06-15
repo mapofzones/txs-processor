@@ -28,11 +28,17 @@ func (p *PostgresProcessor) handleTransaction(ctx context.Context, metadata proc
 	// if tx had errors and did not affect the state
 	if !metadata.TxMetadata.Accepted {
 		p.txStats.Count++
+		//todo: add addresses collection logic
+		//if len(msg.Sender) > 0 {
+		//	p.txStats.Addresses = append(p.txStats.Addresses, msg.Sender)
+		//} else {
+		//	log.Fatal("Not found sender for tx!")
+		//}
 		for _, m := range msg.Messages {
-			if _, ok := m.(watcher.IBCTransfer); ok {
+			if message, ok := m.(watcher.IBCTransfer); ok {
 				p.txStats.TxWithIBCTransferFail++
 				p.txStats.TxWithIBCTransfer++
-				//todo: calculate ibc fail transfers with channel information
+				p.handleIBCTransfer(ctx, metadata, message)
 				return nil
 			}
 		}
@@ -122,10 +128,11 @@ func (p *PostgresProcessor) handleIBCTransfer(ctx context.Context, metadata proc
 		//return fmt.Errorf("%w: could not process ibc transfer with closed channelID", processor.CommitError)
 		//todo: need to recalculate statistics for frozen transfer txs and resolve the issue of transactions to closed channels
 	}
+
 	if msg.Source {
-		p.ibcStats.Append(metadata.ChainID, chainID, metadata.BlockTime, msg.ChannelID)
+		p.ibcStats.Append(metadata.ChainID, chainID, metadata.BlockTime, msg.ChannelID, !metadata.TxMetadata.Accepted)
 	} else {
-		p.ibcStats.Append(chainID, metadata.ChainID, metadata.BlockTime, msg.ChannelID)
+		p.ibcStats.Append(chainID, metadata.ChainID, metadata.BlockTime, msg.ChannelID, !metadata.TxMetadata.Accepted)
 	}
 
 	return nil

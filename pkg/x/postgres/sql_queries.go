@@ -38,9 +38,10 @@ const markChannelQuery = `update ibc_channels
         where zone = '%s'
         and channel_id = '%s';`
 
-const addIbcStatsQuery = `insert into ibc_transfer_hourly_stats(zone, zone_src, zone_dest, hour, txs_cnt, period, ibc_channel) values %s
+const addIbcStatsQuery = `insert into ibc_transfer_hourly_stats(zone, zone_src, zone_dest, hour, txs_cnt, period, ibc_channel, txs_fail_cnt) values %s
     on conflict(zone, zone_src, zone_dest, hour, period, ibc_channel) do update
-        set txs_cnt = ibc_transfer_hourly_stats.txs_cnt + %d;`
+        set txs_cnt = ibc_transfer_hourly_stats.txs_cnt + %d,
+            txs_fail_cnt = ibc_transfer_hourly_stats.txs_fail_cnt + %d;`
 
 // read-only queries
 

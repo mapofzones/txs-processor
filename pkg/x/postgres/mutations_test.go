@@ -288,7 +288,7 @@ func Test_addIbcStats(t *testing.T) {
     timeArgs2, _ := time.Parse("2006-01-02T15:04:05", "2017-09-11T04:20:49")
     type args struct {
         origin  string
-        ibcData map[string]map[string]map[string]map[time.Time]int
+        ibcData map[string]map[string]map[string]map[time.Time]*processor.IbcCounters
     }
     tests := []struct {
         name string
@@ -302,18 +302,24 @@ func Test_addIbcStats(t *testing.T) {
         },
         {
             "second_empty_args",
-            args{"origin1", map[string]map[string]map[string]map[time.Time]int{}},
+            args{"origin1", map[string]map[string]map[string]map[time.Time]*processor.IbcCounters{}},
             []string{},
         },
         {
             "first_args",
-            args{"origin1", map[string]map[string]map[string]map[time.Time]int{"sourceZone1": {"destZone1": {"channel1": {timeArgs1: 6}}}}},
-            []string{"insert into ibc_transfer_hourly_stats(zone, zone_src, zone_dest, hour, txs_cnt, period, ibc_channel) values ('origin1', 'sourceZone1', 'destZone1', '2006-01-02T15:04:05', 6, 1, 'channel1')\n    on conflict(zone, zone_src, zone_dest, hour, period, ibc_channel) do update\n        set txs_cnt = ibc_transfer_hourly_stats.txs_cnt + 6;"},
+            args{"origin1", map[string]map[string]map[string]map[time.Time]*processor.IbcCounters{"sourceZone1": {"destZone1": {"channel1": {timeArgs1: &processor.IbcCounters{
+                Transfers:       47,
+                FailedTransfers: 8,
+            }}}}}},
+            []string{"insert into ibc_transfer_hourly_stats(zone, zone_src, zone_dest, hour, txs_cnt, period, ibc_channel, txs_fail_cnt) values ('origin1', 'sourceZone1', 'destZone1', '2006-01-02T15:04:05', 47, 1, 'channel1', 8)\n    on conflict(zone, zone_src, zone_dest, hour, period, ibc_channel) do update\n        set txs_cnt = ibc_transfer_hourly_stats.txs_cnt + 47,\n            txs_fail_cnt = ibc_transfer_hourly_stats.txs_fail_cnt + 8;"},
         },
         {
             "second_args",
-            args{"origin2", map[string]map[string]map[string]map[time.Time]int{"sourceZone2": {"destZone2": {"channel2": {timeArgs2: 358}}}}},
-            []string{"insert into ibc_transfer_hourly_stats(zone, zone_src, zone_dest, hour, txs_cnt, period, ibc_channel) values ('origin2', 'sourceZone2', 'destZone2', '2017-09-11T04:20:49', 358, 1, 'channel2')\n    on conflict(zone, zone_src, zone_dest, hour, period, ibc_channel) do update\n        set txs_cnt = ibc_transfer_hourly_stats.txs_cnt + 358;"},
+            args{"origin2", map[string]map[string]map[string]map[time.Time]*processor.IbcCounters{"sourceZone2": {"destZone2": {"channel2": {timeArgs2: &processor.IbcCounters{
+                Transfers:       19,
+                FailedTransfers: 3,
+            }}}}}},
+            []string{"insert into ibc_transfer_hourly_stats(zone, zone_src, zone_dest, hour, txs_cnt, period, ibc_channel, txs_fail_cnt) values ('origin2', 'sourceZone2', 'destZone2', '2017-09-11T04:20:49', 19, 1, 'channel2', 3)\n    on conflict(zone, zone_src, zone_dest, hour, period, ibc_channel) do update\n        set txs_cnt = ibc_transfer_hourly_stats.txs_cnt + 19,\n            txs_fail_cnt = ibc_transfer_hourly_stats.txs_fail_cnt + 3;"},
         },
     }
     for _, tt := range tests {

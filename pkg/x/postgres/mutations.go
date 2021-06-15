@@ -94,7 +94,7 @@ func markChannel(origin, channelID string, state bool) string {
 		channelID)
 }
 
-func addIbcStats(origin string, ibcData map[string]map[string]map[string]map[time.Time]int) []string {
+func addIbcStats(origin string, ibcData map[string]map[string]map[string]map[time.Time]*processor.IbcCounters) []string {
 	// buffer for our queries
 	queries := make([]string, 0, 32)
 
@@ -104,8 +104,8 @@ func addIbcStats(origin string, ibcData map[string]map[string]map[string]map[tim
 			for channel, channelMap := range hourMap {
 				for hour, count := range channelMap {
 					queries = append(queries, fmt.Sprintf(addIbcStatsQuery,
-						fmt.Sprintf("('%s', '%s', '%s', '%s', %d, %d, '%s')", origin, source, dest, hour.Format(Format), count, 1, channel),
-					count))
+						fmt.Sprintf("('%s', '%s', '%s', '%s', %d, %d, '%s', %d)", origin, source, dest, hour.Format(Format), count.Transfers, 1, channel, count.FailedTransfers),
+					count.Transfers, count.FailedTransfers))
 				}
 			}
 		}
