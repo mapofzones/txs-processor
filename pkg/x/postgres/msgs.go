@@ -25,15 +25,16 @@ func (p *PostgresProcessor) handleTransaction(ctx context.Context, metadata proc
 		}
 	}
 
+	// addresses collection logic
+	if len(msg.Sender) > 0 {
+		p.txStats.Addresses = append(p.txStats.Addresses, msg.Sender)
+	} else {
+		log.Println("Not found sender for tx!")
+	}
+
 	// if tx had errors and did not affect the state
 	if !metadata.TxMetadata.Accepted {
 		p.txStats.Count++
-		//todo: add addresses collection logic
-		//if len(msg.Sender) > 0 {
-		//	p.txStats.Addresses = append(p.txStats.Addresses, msg.Sender)
-		//} else {
-		//	log.Fatal("Not found sender for tx!")
-		//}
 		for _, m := range msg.Messages {
 			if message, ok := m.(watcher.IBCTransfer); ok {
 				p.txStats.TxWithIBCTransferFail++
@@ -57,15 +58,11 @@ func (p *PostgresProcessor) handleTransaction(ctx context.Context, metadata proc
 			for _, am := range m.(watcher.IBCTransfer).Amount {
 				p.txStats.TurnoverAmount.Add(p.txStats.TurnoverAmount, new(big.Int).SetUint64(am.Amount))
 			}
-			p.txStats.Addresses = append(p.txStats.Addresses, m.(watcher.IBCTransfer).Sender)
-			log.Println(m.(watcher.IBCTransfer).Sender)
 		}
 		if _, ok := m.(watcher.Transfer); ok {
 			for _, am := range m.(watcher.Transfer).Amount {
 				p.txStats.TurnoverAmount.Add(p.txStats.TurnoverAmount, new(big.Int).SetUint64(am.Amount))
 			}
-			p.txStats.Addresses = append(p.txStats.Addresses, m.(watcher.Transfer).Sender)
-			log.Println(m.(watcher.Transfer).Sender)
 		}
 		handle := p.Handler(m)
 		if handle != nil {
@@ -83,9 +80,6 @@ func (p *PostgresProcessor) handleTransaction(ctx context.Context, metadata proc
 		p.txStats.TxWithIBCTransfer++
 	}
 
-	if len(msg.Sender) > 0 {
-		p.txStats.Addresses = append(p.txStats.Addresses, msg.Sender)
-	}
 	return nil
 }
 
