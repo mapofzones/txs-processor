@@ -43,6 +43,10 @@ const addIbcStatsQuery = `insert into ibc_transfer_hourly_stats(zone, zone_src, 
         set txs_cnt = ibc_transfer_hourly_stats.txs_cnt + %d,
             txs_fail_cnt = ibc_transfer_hourly_stats.txs_fail_cnt + %d;`
 
+const addIbcCashflowQuery = `insert into ibc_transfer_hourly_cashflow(zone, zone_src, zone_dest, hour, period, ibc_channel, denom, amount) values %s
+    on conflict(zone, zone_src, zone_dest, hour, period, ibc_channel, denom) do update
+        set amount = ibc_transfer_hourly_cashflow.amount + %d;`
+
 // read-only queries
 
 const lastProcessedBlockQuery = `select last_processed_block from blocks_log

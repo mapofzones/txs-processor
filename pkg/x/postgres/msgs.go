@@ -128,9 +128,9 @@ func (p *PostgresProcessor) handleIBCTransfer(ctx context.Context, metadata proc
 	}
 
 	if msg.Source {
-		p.ibcStats.Append(metadata.ChainID, chainID, metadata.BlockTime, msg.ChannelID, !metadata.TxMetadata.Accepted)
+		p.ibcStats.Append(metadata.ChainID, chainID, metadata.BlockTime, msg.ChannelID, !metadata.TxMetadata.Accepted, msg.Amount)
 	} else {
-		p.ibcStats.Append(chainID, metadata.ChainID, metadata.BlockTime, msg.ChannelID, !metadata.TxMetadata.Accepted)
+		p.ibcStats.Append(chainID, metadata.ChainID, metadata.BlockTime, msg.ChannelID, !metadata.TxMetadata.Accepted, msg.Amount)
 	}
 
 	return nil

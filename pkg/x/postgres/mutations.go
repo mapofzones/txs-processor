@@ -106,6 +106,11 @@ func addIbcStats(origin string, ibcData map[string]map[string]map[string]map[tim
 					queries = append(queries, fmt.Sprintf(addIbcStatsQuery,
 						fmt.Sprintf("('%s', '%s', '%s', '%s', %d, %d, '%s', %d)", origin, source, dest, hour.Format(Format), count.Transfers, 1, channel, count.FailedTransfers),
 					count.Transfers, count.FailedTransfers))
+					for denom, amount := range count.Coin {
+						queries = append(queries, fmt.Sprintf(addIbcCashflowQuery,
+							fmt.Sprintf("('%s', '%s', '%s', '%s', %d, '%s', '%s', %d)", origin, source, dest, hour.Format(Format), 1, channel, denom, amount),
+							amount))
+					}
 				}
 			}
 		}
