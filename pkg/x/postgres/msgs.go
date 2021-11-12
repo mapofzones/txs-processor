@@ -58,11 +58,15 @@ func (p *PostgresProcessor) handleTransaction(ctx context.Context, metadata proc
 			for _, am := range m.(watcher.IBCTransfer).Amount {
 				p.txStats.TurnoverAmount.Add(p.txStats.TurnoverAmount, new(big.Int).SetUint64(am.Amount))
 			}
+			p.txStats.Addresses = append(p.txStats.Addresses, m.(watcher.IBCTransfer).Sender)
+			log.Println(m.(watcher.IBCTransfer).Sender)
 		}
 		if _, ok := m.(watcher.Transfer); ok {
 			for _, am := range m.(watcher.Transfer).Amount {
 				p.txStats.TurnoverAmount.Add(p.txStats.TurnoverAmount, new(big.Int).SetUint64(am.Amount))
 			}
+			p.txStats.Addresses = append(p.txStats.Addresses, m.(watcher.Transfer).Sender)
+			log.Println(m.(watcher.Transfer).Sender)
 		}
 		handle := p.Handler(m)
 		if handle != nil {
