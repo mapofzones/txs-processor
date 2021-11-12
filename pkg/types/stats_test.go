@@ -13,6 +13,7 @@ func TestIbcData_Append(t *testing.T) {
         destination string
         channel     string
         t           time.Time
+        coins []struct { Amount uint64; Coin   string }
     }
     timeArgs, _ := time.Parse("2006-01-02T15:04:05", "2006-01-02T15:04:05")
     timeWant, _ := time.Parse("2006-01-02T15:00:00", "2006-01-02T15:00:00")
@@ -21,6 +22,29 @@ func TestIbcData_Append(t *testing.T) {
     destinationName1 := "myDestination"
     destinationName2 := "myDestination2"
     channelID := "channel-1"
+    coins := []struct {
+        Amount uint64
+        Coin   string
+    } {
+        {
+            Amount: 93458345,
+            Coin: "ibc/sdfjlksadflkdsafkdsfj34285udfaj",
+        },
+        {
+            Amount: 2345432435,
+            Coin: "ibc/j934u5edjf9d8fu984uteh8hfedw9fh9",
+        },
+        {
+            Amount: 1,
+            Coin: "ibc/sdfjlksadflkdsafkdsfj34285udfaj",
+        },
+    }
+    coinsMap := make(map[string]uint64)
+    coinsMap["ibc/sdfjlksadflkdsafkdsfj34285udfaj"] = 93458346
+    coinsMap["ibc/j934u5edjf9d8fu984uteh8hfedw9fh9"] = 2345432435
+    coinsMap2 := make(map[string]uint64)
+    coinsMap2["ibc/sdfjlksadflkdsafkdsfj34285udfaj"] = 186916692
+    coinsMap2["ibc/j934u5edjf9d8fu984uteh8hfedw9fh9"] = 4690864870
     tests := []struct {
         name    string
         ibcData IbcData
@@ -30,37 +54,41 @@ func TestIbcData_Append(t *testing.T) {
         {
             "initial_increment",
             m,
-            args{sourceName, destinationName1, channelID, timeArgs},
+            args{sourceName, destinationName1, channelID, timeArgs, coins},
             map[string]map[string]map[string]map[time.Time]*IbcCounters{sourceName: {destinationName1: {channelID: {timeWant: &IbcCounters{
                 Transfers:       1,
                 FailedTransfers: 1,
+                Coin: coinsMap,
             }}}}},
         },
         {
             "increment_existing",
             m,
-            args{sourceName, destinationName1, channelID, timeArgs},
+            args{sourceName, destinationName1, channelID, timeArgs, coins},
             map[string]map[string]map[string]map[time.Time]*IbcCounters{sourceName: {destinationName1: {channelID: {timeWant: &IbcCounters{
                 Transfers:       2,
                 FailedTransfers: 2,
+                Coin: coinsMap2,
             }}}}},
         },
         {
             "increment_with_second_destination",
             m,
-            args{sourceName, destinationName2, channelID, timeArgs},
+            args{sourceName, destinationName2, channelID, timeArgs, coins},
             map[string]map[string]map[string]map[time.Time]*IbcCounters{sourceName: {destinationName1: {channelID: {timeWant: &IbcCounters{
                 Transfers:       2,
                 FailedTransfers: 2,
+                Coin: coinsMap2,
             }}}, destinationName2: {channelID: {timeWant: &IbcCounters{
                 Transfers:       1,
                 FailedTransfers: 1,
+                Coin: coinsMap,
             }}}}},
         },
     }
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
-            tt.ibcData.Append(tt.args.source, tt.args.destination, tt.args.t, tt.args.channel, true)
+            tt.ibcData.Append(tt.args.source, tt.args.destination, tt.args.t, tt.args.channel, true, coins)
             assert.Equal(t, tt.want, tt.ibcData)
         })
     }
