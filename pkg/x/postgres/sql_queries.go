@@ -47,8 +47,10 @@ const addIbcCashflowQuery = `insert into ibc_transfer_hourly_cashflow(zone, zone
     on conflict(zone, zone_src, zone_dest, hour, period, ibc_channel, denom) do update
         set amount = ibc_transfer_hourly_cashflow.amount + %d;`
 
-// read-only queries
+const addDerivativeQuery = `insert into derivatives(zone, denom) values %s
+    on conflict(zone, denom) do nothing;`
 
+// read-only queries
 const lastProcessedBlockQuery = `select last_processed_block from blocks_log
     where zone = '%s';`
 
