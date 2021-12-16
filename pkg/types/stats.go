@@ -7,13 +7,13 @@ import (
 
 // TxStats structure is used to see how many txs were send during each hour
 type TxStats struct {
-	ChainID					string
-	Hour					time.Time //must have 0 minutes, seconds and micro/nano seconds
-	Count					int
-	TxWithIBCTransfer		int
-	TxWithIBCTransferFail	int
-	Addresses				[]string
-	TurnoverAmount			*big.Int
+	ChainID               string
+	Hour                  time.Time //must have 0 minutes, seconds and micro/nano seconds
+	Count                 int
+	TxWithIBCTransfer     int
+	TxWithIBCTransferFail int
+	Addresses             []string
+	TurnoverAmount        *big.Int
 }
 
 // IbcStats represents statistics that we need to write to db
@@ -27,16 +27,19 @@ type IbcStats struct {
 }
 
 type IbcCounters struct {
-	Transfers int
+	Transfers       int
 	FailedTransfers int
-	Coin map[string]uint64
+	Coin            map[string]uint64
 }
 
 // IbcData is used to organize ibc tx data during each hour
 type IbcData map[string]map[string]map[string]map[time.Time]*IbcCounters
 
 // Append truncates timestamps and puts data into ibc data structure
-func (m *IbcData) Append(source, destination string, t time.Time, channelID string, isFailed bool, coins []struct { Amount uint64; Coin   string }) {
+func (m *IbcData) Append(source, destination string, t time.Time, channelID string, isFailed bool, coins []struct {
+	Amount uint64
+	Coin   string
+}) {
 	t = t.Truncate(time.Hour)
 	if *m == nil {
 		*m = make(IbcData)
@@ -58,21 +61,21 @@ func (m *IbcData) Append(source, destination string, t time.Time, channelID stri
 		(*m)[source][destination][channelID][t] = &IbcCounters{
 			Transfers:       0,
 			FailedTransfers: 0,
-			Coin: nil,
+			Coin:            nil,
 		}
 	}
 
 	((*m)[source][destination][channelID][t]).Transfers++
 	if isFailed {
 		((*m)[source][destination][channelID][t]).FailedTransfers++
-	}
-	
-	if ((*m)[source][destination][channelID][t]).Coin == nil {
-		((*m)[source][destination][channelID][t]).Coin = make(map[string]uint64)
-	}
+	} else {
+		if ((*m)[source][destination][channelID][t]).Coin == nil {
+			((*m)[source][destination][channelID][t]).Coin = make(map[string]uint64)
+		}
 
-	for _, coin := range coins {
-		((*m)[source][destination][channelID][t]).Coin[coin.Coin] += coin.Amount
+		for _, coin := range coins {
+			((*m)[source][destination][channelID][t]).Coin[coin.Coin] += coin.Amount
+		}
 	}
 }
 
@@ -84,12 +87,12 @@ func (m IbcData) ToIbcStats() []IbcStats {
 			for channel := range m[source][destination] {
 				for hour := range m[source][destination][channel] {
 					stats = append(stats, IbcStats{
-						Source:      	source,
-						Destination: 	destination,
-						Channel:     	channel,
-						Hour:        	hour,
-						Count:       	m[source][destination][channel][hour].Transfers,
-						FailedCount:    m[source][destination][channel][hour].FailedTransfers,
+						Source:      source,
+						Destination: destination,
+						Channel:     channel,
+						Hour:        hour,
+						Count:       m[source][destination][channel][hour].Transfers,
+						FailedCount: m[source][destination][channel][hour].FailedTransfers,
 					})
 				}
 			}
