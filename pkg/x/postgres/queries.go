@@ -107,16 +107,25 @@ func (p *PostgresProcessor) GetChannelStatus(ctx context.Context, channelID, ori
 func (p *PostgresProcessor) ChainID(ctx context.Context, channelID, originChainID string) (string, error) {
 	// check block cache before attempting to query db
 	// if whole chain of events(client -> connection -> channel) happened in the same block
-	if chainID, ok := p.clients[p.connections[p.channels[channelID]]]; ok {
+	//channelMap := p.clients[p.connections[p.channels[channelID]]]
+	channelMap := p.channels[channelID]
+	var connectionId string
+	for k, _ := range channelMap {
+		connectionId = k
+		break
+	}
+	if chainID, ok := p.clients[p.connections[connectionId]]; ok {
 		return chainID, nil
 	}
 	// if connection and channel happened in this block
-	if clientID, ok := p.connections[p.channels[channelID]]; ok {
+	if clientID, ok := p.connections[connectionId]; ok {
 		return p.ChainIDFromClientID(ctx, clientID, originChainID)
 	}
 	// if channel was created in the same block
-	if connectionID, ok := p.channels[channelID]; ok {
-		return p.ChainIDFromConnectionID(ctx, connectionID, originChainID)
+	if connectionMap, ok := p.channels[channelID]; ok {
+		for connectionID, _ := range connectionMap {
+			return p.ChainIDFromConnectionID(ctx, connectionID, originChainID)
+		}
 	}
 
 	// nothing in cache, query db
