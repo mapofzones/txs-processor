@@ -19,8 +19,8 @@ func (p *PostgresProcessor) handleTransaction(ctx context.Context, metadata proc
 
 	if p.txStats == nil {
 		p.txStats = &processor.TxStats{
-			ChainID: metadata.ChainID,
-			Hour:    metadata.BlockTime.Truncate(time.Hour),
+			ChainID:        metadata.ChainID,
+			Hour:           metadata.BlockTime.Truncate(time.Hour),
 			TurnoverAmount: big.NewInt(0),
 		}
 	}
@@ -98,17 +98,23 @@ func (p *PostgresProcessor) handleCreateConnection(ctx context.Context, metadata
 }
 
 func (p *PostgresProcessor) handleCreateChannel(ctx context.Context, metadata processor.MessageMetadata, msg watcher.CreateChannel) error {
-	p.channels[msg.ChannelID] = msg.ConnectionID
+	p.channels[msg.ChannelID] = map[string]string{
+		msg.ConnectionID: msg.CounterpartyChannelID,
+	}
 	return nil
 }
 
 func (p *PostgresProcessor) handleOpenChannel(ctx context.Context, metadata processor.MessageMetadata, msg watcher.OpenChannel) error {
-	p.channelStates[msg.ChannelID] = true
+	p.channelStates[msg.ChannelID] = map[bool]string{
+		true: msg.CounterpartyChannelID,
+	}
 	return nil
 }
 
 func (p *PostgresProcessor) handleCloseChannel(ctx context.Context, metadata processor.MessageMetadata, msg watcher.CloseChannel) error {
-	p.channelStates[msg.ChannelID] = false
+	p.channelStates[msg.ChannelID] = map[bool]string{
+		false: "",
+	}
 	return nil
 }
 

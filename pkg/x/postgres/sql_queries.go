@@ -30,10 +30,15 @@ const addClientsQuery = `insert into ibc_clients(zone, client_id, chain_id) valu
 const addConnectionsQuery = `insert into ibc_connections(zone, connection_id, client_id) values %s
     on conflict (zone, connection_id) do nothing;`
 
-const addChannelsQuery = `insert into ibc_channels(zone, channel_id, connection_id, is_opened) values %s
+const addChannelsQuery = `insert into ibc_channels(zone, channel_id, connection_id, is_opened, counterparty_channel_id) values %s
     on conflict(zone, channel_id) do nothing;`
 
 const markChannelQuery = `update ibc_channels
+    set is_opened = %t , counterparty_channel_id = '%s'
+        where zone = '%s'
+        and channel_id = '%s';`
+
+const markChannelQueryWithoutCounterpartyChannel = `update ibc_channels
     set is_opened = %t
         where zone = '%s'
         and channel_id = '%s';`

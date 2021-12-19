@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	processor "github.com/mapofzones/txs-processor/pkg/types"
@@ -75,10 +76,12 @@ func addConnections(origin string, data map[string]string) string {
 	return fmt.Sprintf(addConnectionsQuery, values)
 }
 
-func addChannels(origin string, data map[string]string) string {
+func addChannels(origin string, data map[string]map[string]string) string {
 	values := ""
-	for channelID, connectionID := range data {
-		values += fmt.Sprintf("('%s', '%s', '%s',%t),", origin, channelID, connectionID, false)
+	for channelID, connectionMap := range data {
+		for connectionId, counterpartyChannelId := range connectionMap {
+			values += fmt.Sprintf("('%s', '%s', '%s', %t, '%s'),", origin, channelID, connectionId, false, counterpartyChannelId)
+		}
 	}
 	if len(values) > 0 {
 		values = values[:len(values)-1]
@@ -87,11 +90,21 @@ func addChannels(origin string, data map[string]string) string {
 	return fmt.Sprintf(addChannelsQuery, values)
 }
 
-func markChannel(origin, channelID string, state bool) string {
-	return fmt.Sprintf(markChannelQuery,
-		state,
-		origin,
-		channelID)
+func markChannel(origin, channelID string, isOpen bool, counterpartyChannelId string) string {
+	var result string
+	if strings.EqualFold(counterpartyChannelId, "") {
+		result = fmt.Sprintf(markChannelQueryWithoutCounterpartyChannel,
+			isOpen,
+			origin,
+			channelID)
+	} else {
+		result = fmt.Sprintf(markChannelQuery,
+			isOpen,
+			counterpartyChannelId,
+			origin,
+			channelID)
+	}
+	return result
 }
 
 func addIbcStats(origin string, ibcData map[string]map[string]map[string]map[time.Time]*processor.IbcCounters) []string {
@@ -105,7 +118,7 @@ func addIbcStats(origin string, ibcData map[string]map[string]map[string]map[tim
 				for hour, count := range channelMap {
 					queries = append(queries, fmt.Sprintf(addIbcStatsQuery,
 						fmt.Sprintf("('%s', '%s', '%s', '%s', %d, %d, '%s', %d)", origin, source, dest, hour.Format(Format), count.Transfers, 1, channel, count.FailedTransfers),
-					count.Transfers, count.FailedTransfers))
+						count.Transfers, count.FailedTransfers))
 					for denom, amount := range count.Coin {
 						queries = append(queries, fmt.Sprintf(addIbcCashflowQuery,
 							fmt.Sprintf("('%s', '%s', '%s', '%s', %d, '%s', '%s', %d)", origin, source, dest, hour.Format(Format), 1, channel, denom, amount),

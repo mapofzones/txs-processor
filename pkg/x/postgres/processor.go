@@ -19,8 +19,8 @@ type PostgresProcessor struct {
 	ibcStats      processor.IbcData
 	clients       map[string]string
 	connections   map[string]string
-	channels      map[string]string
-	channelStates map[string]bool
+	channels      map[string]map[string]string
+	channelStates map[string]map[bool]string
 }
 
 // NewProcessor returns instance of Postgres processor
@@ -33,8 +33,8 @@ func NewProcessor(ctx context.Context, dbEndpoint string) (*PostgresProcessor, e
 		conn:          conn,
 		clients:       make(map[string]string),
 		connections:   make(map[string]string),
-		channels:      make(map[string]string),
-		channelStates: make(map[string]bool),
+		channels:      make(map[string]map[string]string),
+		channelStates: make(map[string]map[bool]string),
 		txStats:       nil,
 		ibcStats:      nil,
 	}, nil
@@ -93,8 +93,8 @@ func (p *PostgresProcessor) reset() {
 	p.ibcStats = nil
 	p.clients = make(map[string]string)
 	p.connections = make(map[string]string)
-	p.channels = make(map[string]string)
-	p.channelStates = make(map[string]bool)
+	p.channels = make(map[string]map[string]string)
+	p.channelStates = make(map[string]map[bool]string)
 }
 
 func (p *PostgresProcessor) Commit(ctx context.Context, block watcher.Block) error {
@@ -138,7 +138,9 @@ func (p *PostgresProcessor) Commit(ctx context.Context, block watcher.Block) err
 
 	// update channelStates
 	for channel, state := range p.channelStates {
-		batch.Queue(markChannel(block.ChainID(), channel, state))
+		for isOpen, counterpartyChannel := range state {
+			batch.Queue(markChannel(block.ChainID(), channel, isOpen, counterpartyChannel))
+		}
 	}
 
 	// update ibc stats and add untraced zones
