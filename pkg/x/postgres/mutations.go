@@ -17,12 +17,16 @@ func addZone(chainID string) string {
 func addImplicitZones(clients map[string]string) string {
 	query := ""
 	for _, chainID := range clients {
-		query += fmt.Sprintf("('%s', '%s', %t, %t),", chainID, chainID, false, false)
+		if len(chainID) > 0 {
+			query += fmt.Sprintf("('%s', '%s', %t, %t),", chainID, chainID, false, false)
+		}
 	}
+	result := ""
 	if len(query) > 0 {
 		query = query[:len(query)-1]
+		result = fmt.Sprintf(addImplicitZoneQuery, query)
 	}
-	return fmt.Sprintf(addImplicitZoneQuery, query)
+	return result
 }
 
 func markBlock(chainID string) string {

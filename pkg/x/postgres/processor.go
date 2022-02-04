@@ -121,7 +121,10 @@ func (p *PostgresProcessor) Commit(ctx context.Context, block watcher.Block) err
 	// insert ibc clients
 	if len(p.clients) > 0 {
 		// add zones to which clients refer
-		batch.Queue(addImplicitZones(p.clients))
+		zones := addImplicitZones(p.clients)
+		if len(zones) > 0 {
+			batch.Queue(zones)
+		}
 		// now we can add clients
 		batch.Queue(addClients(block.ChainID(), p.clients))
 	}
