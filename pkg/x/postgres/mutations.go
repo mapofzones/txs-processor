@@ -55,7 +55,13 @@ func addActiveAddressesStats(stats processor.TxStats, address string) string {
 func addClients(origin string, clients map[string]string) string {
 	values := ""
 	for clientID, chainID := range clients {
-		values += fmt.Sprintf("('%s', '%s', '%s'),", origin, clientID, chainID)
+		var row string
+		if len(chainID) > 0 {
+			row = fmt.Sprintf("('%s', '%s', '%s'),", origin, clientID, chainID)
+		} else {
+			row = fmt.Sprintf("('%s', '%s', null),", origin, clientID)
+		}
+		values += row
 	}
 	if len(values) > 0 {
 		values = values[:len(values)-1]
@@ -105,7 +111,7 @@ func addIbcStats(origin string, ibcData map[string]map[string]map[string]map[tim
 				for hour, count := range channelMap {
 					queries = append(queries, fmt.Sprintf(addIbcStatsQuery,
 						fmt.Sprintf("('%s', '%s', '%s', '%s', %d, %d, '%s', %d)", origin, source, dest, hour.Format(Format), count.Transfers, 1, channel, count.FailedTransfers),
-					count.Transfers, count.FailedTransfers))
+						count.Transfers, count.FailedTransfers))
 					for denom, amount := range count.Coin {
 						queries = append(queries, fmt.Sprintf(addIbcCashflowQuery,
 							fmt.Sprintf("('%s', '%s', '%s', '%s', %d, '%s', '%s', %d)", origin, source, dest, hour.Format(Format), 1, channel, denom, amount),
