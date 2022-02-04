@@ -56,7 +56,13 @@ func addActiveAddressesStats(stats processor.TxStats, address string) string {
 func addClients(origin string, clients map[string]string) string {
 	values := ""
 	for clientID, chainID := range clients {
-		values += fmt.Sprintf("('%s', '%s', '%s'),", origin, clientID, chainID)
+		var row string
+		if len(chainID) > 0 {
+			row = fmt.Sprintf("('%s', '%s', '%s'),", origin, clientID, chainID)
+		} else {
+			row = fmt.Sprintf("('%s', '%s', null),", origin, clientID)
+		}
+		values += row
 	}
 	if len(values) > 0 {
 		values = values[:len(values)-1]
