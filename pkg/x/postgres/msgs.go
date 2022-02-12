@@ -19,8 +19,8 @@ func (p *PostgresProcessor) handleTransaction(ctx context.Context, metadata proc
 
 	if p.txStats == nil {
 		p.txStats = &processor.TxStats{
-			ChainID: metadata.ChainID,
-			Hour:    metadata.BlockTime.Truncate(time.Hour),
+			ChainID:        metadata.ChainID,
+			Hour:           metadata.BlockTime.Truncate(time.Hour),
 			TurnoverAmount: big.NewInt(0),
 		}
 	}
@@ -118,7 +118,9 @@ func (p *PostgresProcessor) handleIBCTransfer(ctx context.Context, metadata proc
 		return fmt.Errorf("%w: %s", processor.ConnectionError, err.Error())
 	}
 	if chainID == "" {
-		return fmt.Errorf("%w: could not fetch chainID connected to given channelID", processor.CommitError)
+		//todo: need to enable Errorf when will be solomachine support added
+		//return fmt.Errorf("%w: could not fetch chainID connected to given channelID", processor.CommitError)
+		return nil
 	}
 
 	isEnabledChannel, err := p.GetChannelStatus(ctx, msg.ChannelID, metadata.ChainID)
@@ -127,10 +129,12 @@ func (p *PostgresProcessor) handleIBCTransfer(ctx context.Context, metadata proc
 		//todo: need to recalculate statistics for frozen transfer txs and resolve the issue of transactions to closed channels
 	}
 
-	if msg.Source {
-		p.ibcStats.Append(metadata.ChainID, chainID, metadata.BlockTime, msg.ChannelID, !metadata.TxMetadata.Accepted, msg.Amount)
-	} else {
-		p.ibcStats.Append(chainID, metadata.ChainID, metadata.BlockTime, msg.ChannelID, !metadata.TxMetadata.Accepted, msg.Amount)
+	if len(chainID) > 0 { // ignore solomachines todo: need to add solomachines support
+		if msg.Source {
+			p.ibcStats.Append(metadata.ChainID, chainID, metadata.BlockTime, msg.ChannelID, !metadata.TxMetadata.Accepted, msg.Amount)
+		} else {
+			p.ibcStats.Append(chainID, metadata.ChainID, metadata.BlockTime, msg.ChannelID, !metadata.TxMetadata.Accepted, msg.Amount)
+		}
 	}
 
 	return nil
