@@ -110,7 +110,7 @@ func Test_addActiveAddressesStats(t *testing.T) {
 	timeArgs2, _ := time.Parse("2006-01-02T15:04:05", "2018-13-11T09:17:22")
 	type args struct {
 		stats   processor.TxStats
-		address string
+		address *processor.AddressData
 	}
 	tests := []struct {
 		name     string
@@ -119,28 +119,28 @@ func Test_addActiveAddressesStats(t *testing.T) {
 	}{
 		{
 			"first_empty_args",
-			args{},
-			"insert into active_addresses(address, zone, hour, period) values ('', '', '0001-01-01T00:00:00', 1)\n    on conflict (address, zone, hour, period) do nothing;",
+			args{address: &processor.AddressData{}},
+			"insert into active_addresses(address, zone, hour, period, is_internal_tx, is_internal_transfer, is_external_transfer) values ('', '', '0001-01-01T00:00:00', 1, false, false, false)\n    on conflict (address, zone, hour, period) do update\n        set is_internal_tx = active_addresses.is_internal_tx or EXCLUDED.is_internal_tx,\n\t\t\tis_internal_transfer = active_addresses.is_internal_transfer or EXCLUDED.is_internal_transfer,\n\t\t\tis_external_transfer = active_addresses.is_external_transfer or EXCLUDED.is_external_transfer;",
 		},
 		{
 			"second_empty_args",
-			args{processor.TxStats{}, ""},
-			"insert into active_addresses(address, zone, hour, period) values ('', '', '0001-01-01T00:00:00', 1)\n    on conflict (address, zone, hour, period) do nothing;",
+			args{processor.TxStats{}, &processor.AddressData{Address: "", IsInternalTx: true, IsInternalTransfer: false, IsExternalTransfer: false}},
+			"insert into active_addresses(address, zone, hour, period, is_internal_tx, is_internal_transfer, is_external_transfer) values ('', '', '0001-01-01T00:00:00', 1, true, false, false)\n    on conflict (address, zone, hour, period) do update\n        set is_internal_tx = active_addresses.is_internal_tx or EXCLUDED.is_internal_tx,\n\t\t\tis_internal_transfer = active_addresses.is_internal_transfer or EXCLUDED.is_internal_transfer,\n\t\t\tis_external_transfer = active_addresses.is_external_transfer or EXCLUDED.is_external_transfer;",
 		},
 		{
 			"first_args",
-			args{processor.TxStats{ChainID: "myChainID", Hour: timeArgs}, "moz:kfdjf928hfjvnczmnvsohvyuqoefiudb"},
-			"insert into active_addresses(address, zone, hour, period) values ('moz:kfdjf928hfjvnczmnvsohvyuqoefiudb', 'myChainID', '2006-01-02T15:04:05', 1)\n    on conflict (address, zone, hour, period) do nothing;",
+			args{processor.TxStats{ChainID: "myChainID", Hour: timeArgs}, &processor.AddressData{Address: "moz:kfdjf928hfjvnczmnvsohvyuqoefiudb", IsInternalTx: true, IsInternalTransfer: false, IsExternalTransfer: false}},
+			"insert into active_addresses(address, zone, hour, period, is_internal_tx, is_internal_transfer, is_external_transfer) values ('moz:kfdjf928hfjvnczmnvsohvyuqoefiudb', 'myChainID', '2006-01-02T15:04:05', 1, true, false, false)\n    on conflict (address, zone, hour, period) do update\n        set is_internal_tx = active_addresses.is_internal_tx or EXCLUDED.is_internal_tx,\n\t\t\tis_internal_transfer = active_addresses.is_internal_transfer or EXCLUDED.is_internal_transfer,\n\t\t\tis_external_transfer = active_addresses.is_external_transfer or EXCLUDED.is_external_transfer;",
 		},
 		{
 			"second_args",
-			args{processor.TxStats{ChainID: "myChainID2", Hour: timeArgs2}, "moz:df89hrui3kjdf8iydhgayud"},
-			"insert into active_addresses(address, zone, hour, period) values ('moz:df89hrui3kjdf8iydhgayud', 'myChainID2', '0001-01-01T00:00:00', 1)\n    on conflict (address, zone, hour, period) do nothing;",
+			args{processor.TxStats{ChainID: "myChainID2", Hour: timeArgs2}, &processor.AddressData{Address: "moz:df89hrui3kjdf8iydhgayud", IsInternalTx: true, IsInternalTransfer: false, IsExternalTransfer: false}},
+			"insert into active_addresses(address, zone, hour, period, is_internal_tx, is_internal_transfer, is_external_transfer) values ('moz:df89hrui3kjdf8iydhgayud', 'myChainID2', '0001-01-01T00:00:00', 1, true, false, false)\n    on conflict (address, zone, hour, period) do update\n        set is_internal_tx = active_addresses.is_internal_tx or EXCLUDED.is_internal_tx,\n\t\t\tis_internal_transfer = active_addresses.is_internal_transfer or EXCLUDED.is_internal_transfer,\n\t\t\tis_external_transfer = active_addresses.is_external_transfer or EXCLUDED.is_external_transfer;",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual := addActiveAddressesStats(tt.args.stats, tt.args.address)
+			actual := addActiveAddressesStats(tt.args.stats, *tt.args.address)
 			assert.Equal(t, tt.expected, actual)
 		})
 	}
