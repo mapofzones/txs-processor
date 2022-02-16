@@ -114,7 +114,7 @@ func (p *PostgresProcessor) Commit(ctx context.Context, block watcher.Block) err
 	if p.txStats != nil {
 		batch.Queue(addTxStats(*p.txStats))
 		for _, address := range p.txStats.Addresses {
-			batch.Queue(addActiveAddressesStats(*p.txStats, address))
+			batch.Queue(addActiveAddressesStats(*p.txStats, *address))
 		}
 	}
 

@@ -27,7 +27,13 @@ func (p *PostgresProcessor) handleTransaction(ctx context.Context, metadata proc
 
 	// addresses collection logic
 	if len(msg.Sender) > 0 {
-		p.txStats.Addresses = append(p.txStats.Addresses, msg.Sender)
+		address := &processor.AddressData{
+			Address:            msg.Sender,
+			IsInternalTx:       true,
+			IsInternalTransfer: false,
+			IsExternalTransfer: false,
+		}
+		p.txStats.Addresses = append(p.txStats.Addresses, address)
 	} else {
 		log.Println("Not found sender for tx!")
 	}
@@ -58,14 +64,26 @@ func (p *PostgresProcessor) handleTransaction(ctx context.Context, metadata proc
 			for _, am := range m.(watcher.IBCTransfer).Amount {
 				p.txStats.TurnoverAmount.Add(p.txStats.TurnoverAmount, new(big.Int).SetUint64(am.Amount))
 			}
-			p.txStats.Addresses = append(p.txStats.Addresses, m.(watcher.IBCTransfer).Sender)
+			address := &processor.AddressData{
+				Address:            m.(watcher.IBCTransfer).Sender,
+				IsInternalTx:       false,
+				IsInternalTransfer: m.(watcher.IBCTransfer).Source,
+				IsExternalTransfer: !m.(watcher.IBCTransfer).Source,
+			}
+			p.txStats.Addresses = append(p.txStats.Addresses, address)
 			log.Println(m.(watcher.IBCTransfer).Sender)
 		}
 		if _, ok := m.(watcher.Transfer); ok {
 			for _, am := range m.(watcher.Transfer).Amount {
 				p.txStats.TurnoverAmount.Add(p.txStats.TurnoverAmount, new(big.Int).SetUint64(am.Amount))
 			}
-			p.txStats.Addresses = append(p.txStats.Addresses, m.(watcher.Transfer).Sender)
+			address := &processor.AddressData{
+				Address:            m.(watcher.Transfer).Sender,
+				IsInternalTx:       true,
+				IsInternalTransfer: false,
+				IsExternalTransfer: false,
+			}
+			p.txStats.Addresses = append(p.txStats.Addresses, address)
 			log.Println(m.(watcher.Transfer).Sender)
 		}
 		handle := p.Handler(m)

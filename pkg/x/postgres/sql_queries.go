@@ -21,8 +21,11 @@ const addTxStatsQuery = `insert into total_tx_hourly_stats(zone, hour, txs_cnt, 
 			txs_w_ibc_xfer_fail_cnt = total_tx_hourly_stats.txs_w_ibc_xfer_fail_cnt + %d,
             total_coin_turnover_amount = total_tx_hourly_stats.total_coin_turnover_amount + %d;`
 
-const addActiveAddressesQuery = `insert into active_addresses(address, zone, hour, period) values %s
-    on conflict (address, zone, hour, period) do nothing;`
+const addActiveAddressesQuery = `insert into active_addresses(address, zone, hour, period, is_internal_tx, is_internal_transfer, is_external_transfer) values %s
+    on conflict (address, zone, hour, period) do update
+        set is_internal_tx = active_addresses.is_internal_tx or EXCLUDED.is_internal_tx,
+			is_internal_transfer = active_addresses.is_internal_transfer or EXCLUDED.is_internal_transfer,
+			is_external_transfer = active_addresses.is_external_transfer or EXCLUDED.is_external_transfer;`
 
 const addClientsQuery = `insert into ibc_clients(zone, client_id, chain_id) values %s
     on conflict (zone, client_id) do nothing;`

@@ -50,9 +50,18 @@ func addTxStats(stats processor.TxStats) string {
 	)
 }
 
-func addActiveAddressesStats(stats processor.TxStats, address string) string {
+func addActiveAddressesStats(stats processor.TxStats, addressData processor.AddressData) string {
 	return fmt.Sprintf(addActiveAddressesQuery,
-		fmt.Sprintf("('%s', '%s', '%s', %d)", address, stats.ChainID, stats.Hour.Format(Format), 1),
+		fmt.Sprintf(
+			"('%s', '%s', '%s', %d, %t, %t, %t)",
+			addressData.Address,
+			stats.ChainID,
+			stats.Hour.Format(Format),
+			1,
+			addressData.IsInternalTx,
+			addressData.IsInternalTransfer,
+			addressData.IsExternalTransfer,
+		),
 	)
 }
 

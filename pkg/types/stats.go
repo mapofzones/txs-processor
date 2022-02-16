@@ -5,6 +5,13 @@ import (
 	"time"
 )
 
+type AddressData struct {
+	Address            string
+	IsInternalTx       bool
+	IsInternalTransfer bool
+	IsExternalTransfer bool
+}
+
 // TxStats structure is used to see how many txs were send during each hour
 type TxStats struct {
 	ChainID               string
@@ -12,7 +19,7 @@ type TxStats struct {
 	Count                 int
 	TxWithIBCTransfer     int
 	TxWithIBCTransferFail int
-	Addresses             []string
+	Addresses             []*AddressData
 	TurnoverAmount        *big.Int
 }
 
