@@ -12,7 +12,7 @@ The MoZ processor is a standalone process that listens to a queue for new blocks
 
 Running in a container:
 * `docker build -t tx-processor:v1 .`
-* `docker run --env rabbitmq=amqp://<login>:<pass>@<ip>:<default_port=5672> --env postgres=postgres://<user>:<pass>@<ip>:<default_port=5432>/<db> -it --network="host" tx-processor:v1`
+* `docker run --env rabbitmq=amqp://<login>:<pass>@<ip>:<default_port=5672> --env postgres=postgres://<user>:<pass>@<ip>:<default_port=5432>/<db> --env queue=<rabbitmq_queue_name> -it --network="host" tx-processor:v1`
 
 # Responsiblities
 The processor gets performs the following functions:

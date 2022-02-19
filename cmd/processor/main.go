@@ -11,14 +11,18 @@ import (
 )
 
 func main() {
+	rabbitmqConnector := os.Getenv("rabbitmq")
+	postgresConnector := os.Getenv("postgres")
+	queueName := os.Getenv("queue")
+
 	ctx, cancel := context.WithCancel(context.Background())
 
-	blocks, err := rabbitmq.BlockStream(ctx, os.Getenv("rabbitmq"), "blocks_v2")
+	blocks, err := rabbitmq.BlockStream(ctx, rabbitmqConnector, queueName)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	db, err := postgres.NewProcessor(ctx, os.Getenv("postgres"))
+	db, err := postgres.NewProcessor(ctx, postgresConnector)
 	if err != nil {
 		log.Fatal(err)
 	}
