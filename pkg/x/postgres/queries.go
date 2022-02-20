@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 )
 
@@ -34,16 +33,12 @@ func (p *PostgresProcessor) ChainIDFromClientID(ctx context.Context, clientID, o
 	defer res.Close()
 
 	if res.Next() {
-		var chainID sql.NullString
+		chainID := ""
 		err = res.Scan(&chainID)
 		if err != nil {
 			return "", err
 		}
-		resultChainID := ""
-		if chainID.Valid {
-			resultChainID = chainID.String
-		}
-		return resultChainID, nil
+		return chainID, nil
 	}
 	return "", nil
 }
