@@ -290,6 +290,8 @@ func Test_addIbcStats(t *testing.T) {
 		origin  string
 		ibcData map[string]map[string]map[string]map[time.Time]*processor.IbcCounters
 	}
+	coin := make(map[string]*big.Int)
+	coin["mydenom"], _ = new(big.Int).SetString("395812375128394123579823521693778232347132", 10)
 	tests := []struct {
 		name     string
 		args     args
@@ -320,6 +322,18 @@ func Test_addIbcStats(t *testing.T) {
 				FailedTransfers: 3,
 			}}}}}},
 			[]string{"insert into ibc_transfer_hourly_stats(zone, zone_src, zone_dest, hour, txs_cnt, period, ibc_channel, txs_fail_cnt) values ('origin2', 'sourceZone2', 'destZone2', '2017-09-11T04:20:49', 19, 1, 'channel2', 3)\n    on conflict(zone, zone_src, zone_dest, hour, period, ibc_channel) do update\n        set txs_cnt = ibc_transfer_hourly_stats.txs_cnt + 19,\n            txs_fail_cnt = ibc_transfer_hourly_stats.txs_fail_cnt + 3;"},
+		},
+		{
+			"second_args_with_coin",
+			args{"origin2", map[string]map[string]map[string]map[time.Time]*processor.IbcCounters{"sourceZone2": {"destZone2": {"channel2": {timeArgs2: &processor.IbcCounters{
+				Transfers:       19,
+				FailedTransfers: 3,
+				Coin:            coin,
+			}}}}}},
+			[]string{
+				"insert into ibc_transfer_hourly_stats(zone, zone_src, zone_dest, hour, txs_cnt, period, ibc_channel, txs_fail_cnt) values ('origin2', 'sourceZone2', 'destZone2', '2017-09-11T04:20:49', 19, 1, 'channel2', 3)\n    on conflict(zone, zone_src, zone_dest, hour, period, ibc_channel) do update\n        set txs_cnt = ibc_transfer_hourly_stats.txs_cnt + 19,\n            txs_fail_cnt = ibc_transfer_hourly_stats.txs_fail_cnt + 3;",
+				"insert into ibc_transfer_hourly_cashflow(zone, zone_src, zone_dest, hour, period, ibc_channel, denom, amount) values ('origin2', 'sourceZone2', 'destZone2', '2017-09-11T04:20:49', 1, 'channel2', 'mydenom', 395812375128394123579823521693778232347132)\n    on conflict(zone, zone_src, zone_dest, hour, period, ibc_channel, denom) do update\n        set amount = ibc_transfer_hourly_cashflow.amount + 395812375128394123579823521693778232347132;",
+			},
 		},
 	}
 	for _, tt := range tests {

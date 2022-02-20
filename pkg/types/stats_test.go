@@ -2,6 +2,7 @@ package processor
 
 import (
 	"github.com/stretchr/testify/assert"
+	"math/big"
 	"reflect"
 	"testing"
 	"time"
@@ -14,7 +15,7 @@ func TestIbcData_Append(t *testing.T) {
 		channel     string
 		t           time.Time
 		coins       []struct {
-			Amount uint64
+			Amount *big.Int
 			Coin   string
 		}
 		isFailed bool
@@ -26,29 +27,32 @@ func TestIbcData_Append(t *testing.T) {
 	destinationName1 := "myDestination"
 	destinationName2 := "myDestination2"
 	channelID := "channel-1"
+	firstAmount, _ := new(big.Int).SetString("93458345", 10)
+	secondAmount, _ := new(big.Int).SetString("2345432435", 10)
+	thirdAmount, _ := new(big.Int).SetString("1", 10)
 	coins := []struct {
-		Amount uint64
+		Amount *big.Int
 		Coin   string
 	}{
 		{
-			Amount: 93458345,
+			Amount: firstAmount,
 			Coin:   "ibc/sdfjlksadflkdsafkdsfj34285udfaj",
 		},
 		{
-			Amount: 2345432435,
+			Amount: secondAmount,
 			Coin:   "ibc/j934u5edjf9d8fu984uteh8hfedw9fh9",
 		},
 		{
-			Amount: 1,
+			Amount: thirdAmount,
 			Coin:   "ibc/sdfjlksadflkdsafkdsfj34285udfaj",
 		},
 	}
-	coinsMap := make(map[string]uint64)
-	coinsMap["ibc/sdfjlksadflkdsafkdsfj34285udfaj"] = 93458346
-	coinsMap["ibc/j934u5edjf9d8fu984uteh8hfedw9fh9"] = 2345432435
-	coinsMap2 := make(map[string]uint64)
-	coinsMap2["ibc/sdfjlksadflkdsafkdsfj34285udfaj"] = 186916692
-	coinsMap2["ibc/j934u5edjf9d8fu984uteh8hfedw9fh9"] = 4690864870
+	coinsMap := make(map[string]*big.Int)
+	coinsMap["ibc/sdfjlksadflkdsafkdsfj34285udfaj"], _ = new(big.Int).SetString("93458346", 10)
+	coinsMap["ibc/j934u5edjf9d8fu984uteh8hfedw9fh9"], _ = new(big.Int).SetString("2345432435", 10)
+	coinsMap2 := make(map[string]*big.Int)
+	coinsMap2["ibc/sdfjlksadflkdsafkdsfj34285udfaj"], _ = new(big.Int).SetString("186916692", 10)
+	coinsMap2["ibc/j934u5edjf9d8fu984uteh8hfedw9fh9"], _ = new(big.Int).SetString("4690864870", 10)
 	failedTx := true
 	notFailedTx := false
 	tests := []struct {
@@ -64,8 +68,7 @@ func TestIbcData_Append(t *testing.T) {
 			map[string]map[string]map[string]map[time.Time]*IbcCounters{sourceName: {destinationName1: {channelID: {timeWant: &IbcCounters{
 				Transfers:       1,
 				FailedTransfers: 0,
-				//Coin: nil,
-				Coin: coinsMap,
+				Coin:            coinsMap,
 			}}}}},
 		},
 		{
@@ -76,7 +79,6 @@ func TestIbcData_Append(t *testing.T) {
 				Transfers:       1,
 				FailedTransfers: 1,
 				Coin:            nil,
-				//Coin: coinsMap,
 			}}}}},
 		},
 		{

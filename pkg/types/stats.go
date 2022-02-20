@@ -36,7 +36,7 @@ type IbcStats struct {
 type IbcCounters struct {
 	Transfers       int
 	FailedTransfers int
-	Coin            map[string]uint64
+	Coin            map[string]*big.Int
 }
 
 // IbcData is used to organize ibc tx data during each hour
@@ -44,7 +44,7 @@ type IbcData map[string]map[string]map[string]map[time.Time]*IbcCounters
 
 // Append truncates timestamps and puts data into ibc data structure
 func (m *IbcData) Append(source, destination string, t time.Time, channelID string, isFailed bool, coins []struct {
-	Amount uint64
+	Amount *big.Int
 	Coin   string
 }) {
 	t = t.Truncate(time.Hour)
@@ -77,11 +77,16 @@ func (m *IbcData) Append(source, destination string, t time.Time, channelID stri
 		((*m)[source][destination][channelID][t]).FailedTransfers++
 	} else {
 		if ((*m)[source][destination][channelID][t]).Coin == nil {
-			((*m)[source][destination][channelID][t]).Coin = make(map[string]uint64)
+			((*m)[source][destination][channelID][t]).Coin = make(map[string]*big.Int)
 		}
 
 		for _, coin := range coins {
-			((*m)[source][destination][channelID][t]).Coin[coin.Coin] += coin.Amount
+			value := ((*m)[source][destination][channelID][t]).Coin[coin.Coin]
+			if value == nil {
+				value = new(big.Int)
+				((*m)[source][destination][channelID][t]).Coin[coin.Coin] = value
+			}
+			value.Add(value, coin.Amount)
 		}
 	}
 }
